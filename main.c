@@ -61,16 +61,12 @@ void gameLoop()
         drawImage3( 80, enemyCol, ENEMY_WIDTH, ENEMY_HEIGHT, enemy);
         enemyCol--;
 
+        // Draw each projectile
+        update_projectiles();
+
         // Draw lives
-        //drawString3( 0, 0, "Lives: ", GREEN );
-
-        //if( lives == 3 )
-        //{
-        //    for( int i = 0; i < lives; i++ ) drawRect( 5, 220 + ( i + 10 ), 5, 5, GREEN );
-        //    for( int i = 0; i < lives; i++ ) drawRect( 5, 230 + ( i + 10 ), 5, 5, GREEN );
-        //    for( int i = 0; i < lives; i++ ) drawRect( 5, 240 + ( i + 10 ), 5, 5, GREEN );
-        //}
-
+        // Use drawImage3
+        
         waitForVblank();
 
         // If player hits 'select' return to titleScreen and start game over.
@@ -80,16 +76,23 @@ void gameLoop()
             break;
         }
 
-        // Below are the checks for the player's ship's movement. 
-        if (KEY_DOWN_NOW(BUTTON_DOWN)) 
+        // Player Actions 
+        if( KEY_DOWN_NOW( BUTTON_DOWN ) ) 
         {
-            if(shipRow < 141)
-                move_entity( &player_ship, 4, 0 );
+            if( get_row( &player_ship ) < 141 )
+                move_entity( &player_ship, 2, 0 );
         }
-        if (KEY_DOWN_NOW(BUTTON_UP)) 
+
+        if( KEY_DOWN_NOW( BUTTON_UP ) ) 
         {
-            if (shipRow > 20)
-                move_entity( &player_ship, -4, 0 );
+            if( get_row( &player_ship ) > 20 )
+                move_entity( &player_ship, -2, 0 );
+        }
+    
+        if( KEY_DOWN_NOW( BUTTON_A ) )
+        {
+            while( KEY_DOWN_NOW( BUTTON_A ) ){;}
+            fire_weapon( &player_ship );
         }
     }
 }
