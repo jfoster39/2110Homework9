@@ -1,22 +1,22 @@
 ################################################################################
 # These are variables for the GBA toolchain build
 # You can add others if you wish to
-# Name: Your name here or you will lose points!!!
+# NOTICE:  Jonathan Foster
 ################################################################################
 
 # The name of your desired GBA game
 # This should be a just a name i.e MyFirstGBAGame
 # No SPACES AFTER THE NAME.
-PROGNAME = Homework9
+PROGNAME = Galaga
 
 # The object files you want to compile into your program
 # This should be a space (SPACE!) separated list of .o files
-OFILES = main.o mylib.o
+OFILES = main.o mylib.o title.o ship.o background.o enemy.o
 
 # The header files you have created.
 # This is necessary to determine when to recompile for files.
 # This should be a space (SPACE!) separated list of .h files
-HFILES = 
+HFILES = mylib.h title.h ship.h background.h enemy.h
 
 ################################################################################
 # These are various settings used to make the GBA toolchain work
@@ -25,15 +25,14 @@ HFILES =
 
 TOOLDIR  = /usr/local/cs2110-tools
 ARMLIB   = $(TOOLDIR)/arm-thumb-eabi/lib
-CFLAGS   = -Wall -std=c99 -pedantic 
+CFLAGS   = -Wall -Werror -std=c99 -pedantic 
 CFLAGS   += -mthumb-interwork -mlong-calls -nostartfiles -MMD -MP -I $(TOOLDIR)/include
 LDFLAGS = -L $(TOOLDIR)/lib \
 		  -L $(TOOLDIR)/lib/gcc/arm-thumb-eabi/4.4.1/thumb \
 		  -L $(ARMLIB) \
 		  --script $(ARMLIB)/arm-gba.ld
-LDDEBUG  = -L $(TOOLDIR)/lib -lgbaio
 CDEBUG   = -g -DDEBUG
-CRELEASE = -O2
+CRELEASE = -O2 
 CC       = $(TOOLDIR)/bin/arm-thumb-eabi-gcc
 AS       = $(TOOLDIR)/bin/arm-thumb-eabi-as
 LD       = $(TOOLDIR)/bin/arm-thumb-eabi-ld
@@ -47,12 +46,12 @@ CFILES   = $(OFILES:.o=.c)
 
 all : CFLAGS += $(CRELEASE)
 all : $(PROGNAME).gba
-	@echo "[FINISH] Created $(PROGNAME).gba"
+	@echo "[DONE] Built $(PROGNAME).gba"
 
 .PHONY : all clean
 
 $(PROGNAME).gba : $(PROGNAME).elf
-	@echo "[LINK] Linking objects together to create $(PROGNAME).gba"
+	@echo "[LINK] Linking files together to create $(PROGNAME).gba"
 	@$(OBJCOPY) -O binary $(PROGNAME).elf $(PROGNAME).gba
 
 $(PROGNAME).elf : crt0.o $(OFILES)
@@ -66,37 +65,29 @@ crt0.o : $(ARMLIB)/crt0.s
 	@echo "[COMPILE] Compiling $<"
 	@$(CC) $(CFLAGS) -c $< -o $@
 
-%.o : %.s                                                                        
-	@echo "[AS] Assembling $<"                                               
-	@$(AS) $< -o $@ -mthumb -mthumb-interwork
-
 clean :
-	@echo "[CLEAN] Removing all compiled files"
-	@rm -f *.o *.elf *.gba *.d *~
+	@echo "[CLEAN] Removing all generated files"
+	@rm -f *.o *.elf *.gba *.d
 
 vba : CFLAGS += $(CRELEASE)
 vba : $(PROGNAME).gba
-	@echo "[EXECUTE] Running Emulator VBA-M"
+	@echo "[RUN] Running Emulator VBA-M"
 	@vbam $(VBAOPT) $(PROGNAME).gba > /dev/null 2> /dev/null
+
+gvba : CFLAGS += $(CRELEASE)
+gvba : $(PROGNAME).gba
+	@echo "[RUN] Running Emulator GVBAM"
+	@gvbam $(PROGNAME).gba 2> /dev/null
 
 wxvba : CFLAGS += $(CRELEASE)
 wxvba : $(PROGNAME).gba
-	@echo "[EXECUTE] Running Emulator WXVBAM"
+	@echo "[RUN] Running Emulator WXVBAM"
 	@wxvbam $(PROGNAME).gba
 
-med : CFLAGS += $(CRELEASE)
-med : $(PROGNAME).gba
-	@echo "[EXECUTE] Running Emulator MEDNAFEN"
-	@mednafen $(PROGNAME).gba > /dev/null 2> /dev/null
-
-debugvba : CFLAGS += $(CDEBUG)
-debugvba : $(PROGNAME).gba
+debug : CFLAGS += $(CDEBUG)
+debug : LDDEBUG += -L $(TOOLDIR)/lib -lgbaio
+debug : $(PROGNAME).gba
 	@echo "[DEBUG] Running game in VBA-M"
 	@vbam $(VBAOPT) $(PROGNAME).gba
-
-debugwxvba : CFLAGS += $(CDEBUG)
-debugwxvba : $(PROGNAME).gba
-	@echo "[DEBUG] Running game in WXVBAM"
-	@wxvbam $(PROGNAME).gba
 
 -include $(CFILES:%.c=%.d)
