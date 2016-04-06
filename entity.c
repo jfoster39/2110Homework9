@@ -9,6 +9,7 @@ const int max_projectiles = 100;
 const int max_enemies     = 100;
 int enemy_num             = 0;
 int projectile_num        = 0;
+int kills                 = 0;
 EntityClass projectiles[102];
 EntityClass enemies[102];
 
@@ -72,7 +73,7 @@ void update_projectiles()
         if( projectiles[i].row != 0 )
         {
             projectiles[i].col += 3;
-            draw_entity( &projectiles[i], enemy );
+            draw_entity( &projectiles[i], ship );
         }
     }
 }
@@ -112,6 +113,7 @@ void check_collisions() {
             {
                 enemies[i]     = enemies[max_enemies+1];
                 projectiles[j] = projectiles[max_projectiles+1];
+                kills++;
                 break;
             }
         }
@@ -137,6 +139,7 @@ void remove_old_enemies()
         if( enemies[i].col == 1 )
         {
             enemies[i] = enemies[max_enemies+1];
+            kills++;
             break;
         }
     }

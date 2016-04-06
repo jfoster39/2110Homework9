@@ -11,12 +11,12 @@ PROGNAME = Galaga
 
 # The object files you want to compile into your program
 # This should be a space (SPACE!) separated list of .o files
-OFILES = main.o mylib.o title.o ship.o background.o enemy.o
+OFILES = main.o mylib.o title.o game_over.o ship.o background.o enemy.o win.o
 
 # The header files you have created.
 # This is necessary to determine when to recompile for files.
 # This should be a space (SPACE!) separated list of .h files
-HFILES = mylib.h title.h ship.h background.h enemy.h
+HFILES = mylib.h title.h ship.h background.h enemy.h game_over.h win.h
 
 ################################################################################
 # These are various settings used to make the GBA toolchain work

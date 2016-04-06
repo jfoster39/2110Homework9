@@ -64,42 +64,6 @@ void drawHollowRect(int r, int c, int width, int height, u16 color) {
     }
 }
 
-/**
- * Method for drawing the background, we just set pixels in random
- * places and have them flicker on and off
-**/
-// TO DO: Make the stars flicker in and out.
-void drawBackground(int height, int width, u16 color) {
-    int r;
-	int c;
-	int i;
-
-	for (i=0; i<100; i++) {
-		c = rand() % width;
-		r = rand() % height;
-		switch(rand() % 6) {
-		case 0:
-            setPixel(r, c, WHITE);
-			break;
-		case 1:
-			setPixel(r, c, GREEN);
-			break;
-		case 2:
-			setPixel(r, c, BLUE);
-			break;
-		case 3:
-			setPixel(r, c, RED);
-			break;
-		case 4:
-			setPixel(r, c, CYAN);
-			break;
-		case 5:
-			setPixel(r, c, YELLOW);
-			break;
-		}
-	}
-}
-
 void drawImage3(int r, int c, int width, int height, const u16* image) {
     int i;
     for (i=0; i<height; i++) {
@@ -134,24 +98,19 @@ void drawString3(int row, int col, char *str, u16 color)
     }
 }
 
-void removeImage(int r, int c, int width, int height, u16 color) {
-    int i;
-    for (i=0; i<height; i++) {
-        DMA[3].src = &color;
-        DMA[3].dst = &videoBuffer[OFFSET(r+i, c, 240)];
-        DMA[3].cnt = width | DMA_DESTINATION_INCREMENT | DMA_ON;
-    }
-}
-
 void wipeScreen(u16 color) {
     DMA[3].src = &color;
     DMA[3].dst = videoBuffer;
     DMA[3].cnt = (240*160) | DMA_SOURCE_FIXED | DMA_ON;
 }
 
-int generateEnemyStartRow() {
-    int x = rand() % 160;
-    return x;
+void clearScreen() 
+{
+    volatile int color = GREEN;
+
+    DMA[3].src = &color;
+    DMA[3].dst = videoBuffer;
+    DMA[3].cnt = (240*160) | DMA_SOURCE_FIXED | DMA_ON;
 }
 
 void waitForVblank()

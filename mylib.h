@@ -25,7 +25,6 @@ typedef volatile signed int vs32;
 
 #define RGB(r, g, b) ((r) | ((g) << 5) | ((b) << 10))
 #define WHITE RGB(31, 31, 31)
-#define GREEN RGB(0, 31, 0)
 #define BLUE RGB(0, 0, 31)
 #define RED RGB(31, 0, 0)
 #define CYAN RGB(0, 5, 20)
@@ -117,6 +116,8 @@ typedef struct
 
 #define START_ON_FIFO_EMPTY 0x30000000
 
+#define GREEN (0x1F << 5)
+
 /* Variables, Structures, and Declarations */
 
 extern u16* videoBuffer;
@@ -130,13 +131,7 @@ void drawImage3(int r, int c, int width, int height, const u16* image);
 void drawChar3(int row, int col, char ch, unsigned short color);
 void drawString3(int row, int col, char *str, unsigned short color);
 void wipeScreen(u16 color);
-void removeImage(int r, int c, int width, int height, u16 color);
-int generateEnemyStartRow(); 
+void clearScreen();
 void waitForVblank();
-
-typedef struct {
-    int r;
-    int c;
-}Enemy;
 
 #endif 

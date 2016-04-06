@@ -8,6 +8,8 @@ Name: Jonathan Foster
 #include "mylib.h"
 #include "title.h"
 #include "ship.h"
+#include "game_over.h"
+#include "win.h"
 #include "enemy.h"
 #include "background.h"
 #include "entity.c" 
@@ -19,7 +21,7 @@ int enemyCol;
 int lives;
 int time_diff;
 
-typedef enum State{ TITLE, GAME_LOOP, GAME_OVER } State;
+typedef enum State{ TITLE, GAME_LOOP, GAME_OVER, WIN } State;
 extern State state;
 
 State state = TITLE; 
@@ -27,14 +29,8 @@ State state = TITLE;
 void titleScreen()
 {
     wipeScreen( RGB( 0, 0, 0 ) );
-    // Set our game data
-    shipRow         = 55;
-    shipCol         = 0;
-    enemyCol        = 225;
-    lives           = 3;
-    enemy_num       = 0;
-    projectile_num  = 0;
-    time_diff       = 0;
+    lives = 3;
+    kills = 0;
 
     REG_DISPCNT = MODE3 | BG2_ENABLE;
     DMA[3].src = title;
@@ -47,8 +43,39 @@ void titleScreen()
     state = GAME_LOOP;
 }
 
+void gameOver()
+{
+    REG_DISPCNT = MODE3 | BG2_ENABLE;
+    DMA[3].src = game_over;
+    DMA[3].dst = videoBuffer;
+    DMA[3].cnt = (240*160) | DMA_ON;
+
+    while(!KEY_DOWN_NOW(BUTTON_START));
+    state = TITLE;
+}
+
+void game_win()
+{
+    REG_DISPCNT = MODE3 | BG2_ENABLE;
+    DMA[3].src = win;
+    DMA[3].dst = videoBuffer;
+    DMA[3].cnt = (240*160) | DMA_ON;
+
+    while(!KEY_DOWN_NOW(BUTTON_START));
+    state = TITLE;
+}
+
 void gameLoop()
 {
+    // Set our game data
+    shipRow         = 55;
+    shipCol         = 0;
+    enemyCol        = 225;
+    enemy_num       = 0;
+    projectile_num  = 0;
+    time_diff       = 0;
+    kills           = 0;
+
     REG_DISPCNT = MODE3 | BG2_ENABLE;
 
     EntityClass player_ship;
@@ -60,6 +87,13 @@ void gameLoop()
 
     while (lives != 0) 
     {
+        // Check if player won the level.
+        if( kills == 10 )
+        {
+            state = WIN;
+            break;
+        }
+
         // Draw background
         drawImage3( 0, 0, BACKGROUND_WIDTH, BACKGROUND_HEIGHT, background );
 
@@ -70,7 +104,7 @@ void gameLoop()
         if( time_diff <= 0 && enemy_num < 10 ) 
         {
             time_diff = 75;
-            int rand_row = ( rand() % (150+1-10) ) + 10;
+            int rand_row = ( rand() % (120+1-20) ) + 20;
             generate_enemy( rand_row, enemyCol );
         }
 
@@ -84,6 +118,7 @@ void gameLoop()
         if( is_player_dead( &player_ship ) == 1 )
         {
             lives--; 
+            gameLoop();
         }
 
         check_collisions();
@@ -91,7 +126,10 @@ void gameLoop()
         remove_old_enemies();
 
         // Draw lives
-        // Use drawImage3
+        for( int i = 0; i < lives; i++ ) 
+        {
+            drawImage3( 140, 170 + ( i * 25 ), SHIP_WIDTH, SHIP_HEIGHT, ship ); 
+        }
         
         waitForVblank();
 
@@ -105,7 +143,7 @@ void gameLoop()
         // Player Actions 
         if( KEY_DOWN_NOW( BUTTON_DOWN ) ) 
         {
-            if( get_row( &player_ship ) < 141 )
+            if( get_row( &player_ship ) < 121 )
                 move_entity( &player_ship, 2, 0 );
         }
 
@@ -123,6 +161,13 @@ void gameLoop()
 
         time_diff--;
     }
+    
+    if( lives == 0 )
+    {
+        state = GAME_OVER;
+    }
+    else if( state == WIN ) 
+        return;
 }
 
 int main( void ) 
@@ -134,7 +179,9 @@ int main( void )
         if( state == GAME_LOOP )
            gameLoop();
         if( state == GAME_OVER )
-            break;
+            gameOver();
+        if( state == WIN )
+            game_win();
     }
 
     return 0;
