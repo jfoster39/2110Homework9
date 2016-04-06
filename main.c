@@ -17,6 +17,7 @@ int shipRow;
 int shipCol;
 int enemyCol;
 int lives;
+int time_diff;
 
 typedef enum State{ TITLE, GAME_LOOP, GAME_OVER } State;
 extern State state;
@@ -25,11 +26,15 @@ State state = TITLE;
 
 void titleScreen()
 {
+    wipeScreen( RGB( 0, 0, 0 ) );
     // Set our game data
-    shipRow  = 55;
-    shipCol  = 0;
-    enemyCol = 0;
-    lives    = 3;
+    shipRow         = 55;
+    shipCol         = 0;
+    enemyCol        = 225;
+    lives           = 3;
+    enemy_num       = 0;
+    projectile_num  = 0;
+    time_diff       = 0;
 
     REG_DISPCNT = MODE3 | BG2_ENABLE;
     DMA[3].src = title;
@@ -49,6 +54,10 @@ void gameLoop()
     EntityClass player_ship;
     initialize_entity( &player_ship, SHIP_WIDTH, SHIP_HEIGHT, shipRow, shipCol );
 
+    EntityClass enemy;
+    initialize_entity( &enemy, 0, 0, 0, 0 );
+    enemies[max_enemies+1] = enemy;
+
     while (lives != 0) 
     {
         // Draw background
@@ -57,12 +66,29 @@ void gameLoop()
         // Draw ship
         draw_entity( &player_ship, ship ); 
 
+        // Generate enemy
+        if( time_diff <= 0 && enemy_num < 10 ) 
+        {
+            time_diff = 75;
+            int rand_row = ( rand() % (150+1-10) ) + 10;
+            generate_enemy( rand_row, enemyCol );
+        }
+
         // Draw Enemy
-        drawImage3( 80, enemyCol, ENEMY_WIDTH, ENEMY_HEIGHT, enemy);
-        enemyCol--;
+        update_enemies();
 
         // Draw each projectile
         update_projectiles();
+
+        // Check if player is dead. 
+        if( is_player_dead( &player_ship ) == 1 )
+        {
+            lives--; 
+        }
+
+        check_collisions();
+        remove_old_projectiles();
+        remove_old_enemies();
 
         // Draw lives
         // Use drawImage3
@@ -94,6 +120,8 @@ void gameLoop()
             while( KEY_DOWN_NOW( BUTTON_A ) ){;}
             fire_weapon( &player_ship );
         }
+
+        time_diff--;
     }
 }
 
